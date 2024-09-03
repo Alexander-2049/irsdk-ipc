@@ -7,6 +7,13 @@ exports.irsdkIPC = void 0;
 const node_irsdk_2023_1 = __importDefault(require("node-irsdk-2023"));
 class irsdkIPC {
     constructor({ sessionInfoUpdateInterval, telemetryUpdateInterval, }) {
+        this.lastTelemetryEvent = null;
+        this.lastSessionInfoEvent = null;
+        this.lastConnectedEvent = {
+            data: false,
+            timestamp: new Date(),
+            type: "Connected",
+        };
         this.sessionInfoUpdateInterval = sessionInfoUpdateInterval;
         this.telemetryUpdateInterval = telemetryUpdateInterval;
         const iracing = node_irsdk_2023_1.default.init({
@@ -17,21 +24,39 @@ class irsdkIPC {
             if (!process.send)
                 return;
             process.send(telemetryEvent);
+            this.lastTelemetryEvent = telemetryEvent;
         });
         iracing.on("SessionInfo", (sessionEvent) => {
             if (!process.send)
                 return;
             process.send(sessionEvent);
+            this.lastSessionInfoEvent = sessionEvent;
         });
         iracing.on("Connected", () => {
+            this.lastConnectedEvent = Object.assign(Object.assign({}, this.lastConnectedEvent), { data: true, timestamp: new Date() });
             if (!process.send)
                 return;
-            process.send({ connected: true });
+            process.send(this.lastConnectedEvent);
         });
         iracing.on("Disconnected", () => {
+            this.lastConnectedEvent = Object.assign(Object.assign({}, this.lastConnectedEvent), { data: false, timestamp: new Date() });
             if (!process.send)
                 return;
-            process.send({ connected: false });
+            process.send(this.lastConnectedEvent);
+        });
+        process.on("message", (message) => {
+            if (!process.send || typeof message !== "string")
+                return;
+            message = message.toLowerCase();
+            if (message === "telemetry") {
+                process.send(this.lastTelemetryEvent);
+            }
+            else if (message === "connected") {
+                process.send(this.lastConnectedEvent);
+            }
+            else if (message === "sessioninfo") {
+                process.send(this.lastSessionInfoEvent);
+            }
         });
     }
 }
