@@ -1,5 +1,5 @@
 import irsdk from "node-irsdk-2023";
-import { SessionInfoEvent, TelemetryEvent } from "node-irsdk-2023/src/JsIrSdk";
+import { SessionInfoData, TelemetryValues } from "node-irsdk-2023/src/JsIrSdk";
 
 interface ConnectedEvent {
   type: "Connected";
@@ -7,11 +7,31 @@ interface ConnectedEvent {
   timestamp: Date;
 }
 
+interface Telemetry {
+  type: "Telemetry";
+  data: TelemetryValues | null;
+  timestamp: Date;
+}
+
+interface SessionInfo {
+  type: "SessionInfo";
+  data: SessionInfoData | null;
+  timestamp: Date;
+}
+
 export class irsdkIPC {
   private sessionInfoUpdateInterval: number;
   private telemetryUpdateInterval: number;
-  private lastTelemetryEvent: null | TelemetryEvent = null;
-  private lastSessionInfoEvent: null | SessionInfoEvent = null;
+  private lastTelemetryEvent: Telemetry = {
+    type: "Telemetry",
+    data: null,
+    timestamp: new Date(),
+  };
+  private lastSessionInfoEvent: SessionInfo = {
+    type: "SessionInfo",
+    data: null,
+    timestamp: new Date(),
+  };
   private lastConnectedEvent: ConnectedEvent = {
     data: false,
     timestamp: new Date(),

@@ -7,8 +7,16 @@ exports.irsdkIPC = void 0;
 const node_irsdk_2023_1 = __importDefault(require("node-irsdk-2023"));
 class irsdkIPC {
     constructor({ sessionInfoUpdateInterval, telemetryUpdateInterval, }) {
-        this.lastTelemetryEvent = null;
-        this.lastSessionInfoEvent = null;
+        this.lastTelemetryEvent = {
+            type: "Telemetry",
+            data: null,
+            timestamp: new Date(),
+        };
+        this.lastSessionInfoEvent = {
+            type: "SessionInfo",
+            data: null,
+            timestamp: new Date(),
+        };
         this.lastConnectedEvent = {
             data: false,
             timestamp: new Date(),
